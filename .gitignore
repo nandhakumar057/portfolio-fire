@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Builds
+client/dist/
+server/data/
+
+# Env
+.env
+.env.local
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Uploaded media / resume files (runtime data)
+server/uploads/

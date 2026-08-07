@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Never allow horizontal page scroll on any device (phone / tablet / desktop) */
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  @apply bg-black font-sans text-white antialiased;
+}
+
+::selection {
+  @apply bg-white text-black;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0d0d;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-edge;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted;
+}
+
+@layer components {
+  .container-px {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .card {
+    @apply rounded-2xl border border-edge bg-card;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#E8E8E8] hover:shadow-xl hover:shadow-white/10 active:translate-y-0;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-edge px-6 py-3 font-semibold text-accent transition-all duration-300 hover:-translate-y-0.5 hover:border-white hover:text-white;
+  }
+
+  .gradient-text {
+    @apply text-white;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-edge bg-section px-4 py-3 text-white outline-none transition focus:border-white focus:ring-2 focus:ring-white/10 placeholder:text-muted;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-edge bg-[#222222] px-3 py-1 text-xs font-medium text-accent;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-accent;
+  }
+
+  .icon-chip {
+    @apply flex h-10 w-10 items-center justify-center rounded-xl border border-edge bg-white/5 text-white transition-transform duration-300 group-hover:scale-110;
+  }
+}
+
+/* Subtle blueprint grid for hero/sections — monochrome */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
+/* Animated aurora glows for the hero background (black/white only) */
+.aurora-glow {
+  background: radial-gradient(
+    40% 50% at 50% 50%,
+    rgba(255, 255, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0.02) 45%,
+    transparent 70%
+  );
+}
+
+/* Print — used by the Resume page */
+@media print {
+  nav,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  .print-block {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .print-block * {
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+  }
+  a {
+    text-decoration: none !important;
+  }
+}
