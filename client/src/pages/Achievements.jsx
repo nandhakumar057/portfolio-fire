@@ -4,14 +4,24 @@ import Reveal from '../components/Reveal';
 import SectionHeading from '../components/SectionHeading';
 import AchievementCard from '../components/AchievementCard';
 import usePageMeta from '../hooks/usePageMeta';
-import { getAchievements } from '../api';
+import { getAchievements, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 export default function Achievements() {
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState('All');
+  const [error, setError] = useState('');
+
+  const loadItems = () => {
+    setError('');
+    getAchievements()
+      .then(setItems)
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
 
   useEffect(() => {
-    getAchievements().then(setItems);
+    loadItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   usePageMeta({
@@ -30,6 +40,7 @@ export default function Achievements() {
   return (
     <PageWrap>
       <section className="container-px py-16">
+        {error && <DataNotice message={error} onRetry={loadItems} className="mb-8" />}
         <SectionHeading
           eyebrow="Milestones"
           title="Achievements"

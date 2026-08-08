@@ -5,14 +5,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Premium black enterprise palette — monochrome only
-        primary: { DEFAULT: '#FFFFFF' },
-        accent: '#B8B8B8',
-        surface: '#0D0D0D',
-        section: '#121212',
-        card: '#181818',
-        edge: '#2B2B2B',
-        muted: '#8A8A8A',
+        // Theme-aware palette — every value resolves through a CSS variable
+        // defined in index.css (light values on :root, dark values on .dark),
+        // so a single class toggle restyles the whole site.
+        white: 'rgb(var(--c-white) / <alpha-value>)',
+        black: 'rgb(var(--c-black) / <alpha-value>)',
+        primary: { DEFAULT: 'rgb(var(--c-primary) / <alpha-value>)' },
+        accent: 'rgb(var(--c-accent) / <alpha-value>)',
+        surface: 'rgb(var(--c-surface) / <alpha-value>)',
+        section: 'rgb(var(--c-section) / <alpha-value>)',
+        card: 'rgb(var(--c-card) / <alpha-value>)',
+        edge: 'rgb(var(--c-edge) / <alpha-value>)',
+        muted: 'rgb(var(--c-muted) / <alpha-value>)',
+        overlay: 'rgb(var(--c-overlay) / <alpha-value>)',
       },
       fontFamily: {
         display: ['Poppins', 'Inter', 'sans-serif'],

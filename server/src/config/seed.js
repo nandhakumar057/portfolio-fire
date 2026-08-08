@@ -6,18 +6,11 @@ const seedData = require('./seedData');
 /**
  * Seeds the active data store:
  *  - admin user (kept in sync with ADMIN_USERNAME / ADMIN_PASSWORD env vars)
- *  - profile row (id = "main")
- *  - starter content for every collection, only when empty
+ *  - profile row (id = "main"), only when missing
+ *  - starter content for every collection — ONCE, on the first boot (a
+ *    `contentSeeded` marker in settings makes every later boot leave
+ *    collections untouched, so admin edits/deletes are permanent)
  */
-// Unique key per collection used to make seeding idempotent (no duplicates)
-const UNIQUE_KEYS = {
-  projects: 'title',
-  certifications: 'title',
-  skills: 'name',
-  achievements: 'title',
-  blog_posts: 'title',
-};
-
 async function seed() {
   const store = await getStore();
 
@@ -48,14 +41,25 @@ async function seed() {
     console.warn('[seed] Skipping admin user seed (users table locked/absent):', err.message);
   }
 
-  // 2. Profile
-  const profile = await store.findById('profile', 'main');
-  if (!profile) {
-    await store.create('profile', seedData.profile);
-    console.log('[seed] Created profile.');
+  // 2. Profile — create only when missing (never overwrite a saved profile).
+  //    Wrapped in try/catch: a schema gap on an existing install (e.g. a
+  //    missing column) must not abort the whole boot.
+  try {
+    const profile = await store.findById('profile', 'main');
+    if (!profile) {
+      await store.create('profile', seedData.profile);
+      console.log('[seed] Created profile.');
+    }
+  } catch (err) {
+    console.warn('[seed] Skipping profile seed:', err.message);
   }
 
-  // 3. Content collections — dedupe by unique key so nothing is ever doubled
+  // 3. Content collections — seeded ONCE, then never touched again.
+  //    The old "top-up anything missing" logic ran on every boot and quietly
+  //    undid the admin's work: deleted items were re-created and renamed items
+  //    were duplicated after each restart. Gating seeding behind a marker in
+  //    the settings table makes content seeding a one-time, first-boot event
+  //    so every edit/delete the owner makes is permanent.
   const collections = {
     projects: seedData.projects,
     certifications: seedData.certifications,
@@ -64,24 +68,38 @@ async function seed() {
     blog_posts: seedData.blog_posts,
   };
 
-  // Per-collection try/catch: one problematic table must never block the rest
-  // of the boot (or the whole site).
-  for (const [collection, items] of Object.entries(collections)) {
-    try {
-      const existing = await store.findAll(collection);
-      const seen = new Set(existing.map((x) => x[UNIQUE_KEYS[collection]]).filter(Boolean));
-      const toAdd = items.filter((item) => !seen.has(item[UNIQUE_KEYS[collection]]));
-      if (toAdd.length) {
-        for (const item of toAdd) {
-          await store.create(collection, item);
+  const seeded = await store.findOne('settings', { key: 'contentSeeded' }).catch(() => null);
+  if (!seeded) {
+    // First boot: seed each collection ONLY when it is completely empty.
+    // Seeding only the empties (never "top-up missing titles") means a
+    // previously populated store — even one missing a few seed items — is
+    // never modified, so items the owner deleted in the past stay deleted.
+    // Per-collection try/catch: one problematic table must never block the
+    // rest of the boot (or the whole site).
+    for (const [collection, items] of Object.entries(collections)) {
+      try {
+        const existing = await store.findAll(collection);
+        if (existing.length === 0) {
+          for (const item of items) {
+            await store.create(collection, item);
+          }
+          console.log(`[seed] Seeded ${collection} (${items.length} items).`);
+        } else {
+          console.log(`[seed] ${collection} already has ${existing.length} items — leaving untouched.`);
         }
-        console.log(`[seed] Seeded ${collection} (${toAdd.length} new items).`);
-      } else {
-        console.log(`[seed] ${collection} already up to date (${existing.length} items).`);
+      } catch (err) {
+        console.warn(`[seed] Skipping ${collection} (${err.message}).`);
       }
-    } catch (err) {
-      console.warn(`[seed] Skipping ${collection} (${err.message}).`);
     }
+
+    try {
+      await store.create('settings', { key: 'contentSeeded', value: new Date().toISOString() });
+      console.log('[seed] Content seeded. Future boots will not modify collections.');
+    } catch (err) {
+      console.warn('[seed] Could not record the seed marker:', err.message);
+    }
+  } else {
+    console.log('[seed] Content already seeded — leaving collections untouched.');
   }
 
   return store;

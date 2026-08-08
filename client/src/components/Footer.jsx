@@ -13,6 +13,8 @@ export default function Footer() {
     { to: '/skills', label: 'Skills' },
     { to: '/certifications', label: 'Certifications' },
     { to: '/resume', label: 'Resume' },
+    { to: '/education', label: 'Education' },
+    { to: '/experience', label: 'Experience' },
     { to: '/contact', label: 'Contact' },
   ];
 

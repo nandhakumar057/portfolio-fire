@@ -23,8 +23,9 @@ const Certifications = lazy(() => import('./pages/Certifications'));
 const Achievements = lazy(() => import('./pages/Achievements'));
 const Resume = lazy(() => import('./pages/Resume'));
 const Contact = lazy(() => import('./pages/Contact'));
+const Education = lazy(() => import('./pages/Education'));
+const Experience = lazy(() => import('./pages/Experience'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 
 function AnimatedRoutes() {
@@ -45,8 +46,9 @@ function AnimatedRoutes() {
         <Route path="/certifications" element={<Certifications />} />
         <Route path="/achievements" element={<Achievements />} />
         <Route path="/resume" element={<Resume />} />
+        <Route path="/education" element={<Education />} />
+        <Route path="/experience" element={<Experience />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin"
           element={

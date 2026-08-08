@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const path = require('path');
 const fs = require('fs');
 
@@ -29,7 +30,68 @@ const app = express();
 // (keeps req.protocol correct for absolute upload URLs).
 app.set('trust proxy', 1);
 
-app.use(cors());
+// ── Security headers (helmet v7) ────────────────────────────────────
+// CSP is tuned for the SPA served from client/dist: it has one inline
+// theme-bootstrap script and loads Google Fonts. Uploaded media is fetched
+// cross-origin by the Vercel-hosted frontend, so CORP must allow that.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        connectSrc: ["'self'", 'https:'],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        // helmet merges its defaults with these directives; this explicit null
+        // removes the default `upgrade-insecure-requests`, which would rewrite
+        // http:// API calls to https:// and break the SPA served over plain
+        // HTTP (localhost / single-instance deploys).
+        upgradeInsecureRequests: null,
+      },
+    },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
+
+// ── CORS allowlist ──────────────────────────────────────────────────
+// The SPA dev server and the deployed Vercel site are always allowed.
+// Add more origins (e.g. a custom domain) via CORS_ORIGINS (comma-separated).
+const allowedOrigins = new Set(
+  [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://nandhakumar-portfolio.vercel.app',
+    // When the SPA is deployed on a custom domain (VITE_SITE_URL), it is
+    // allowed automatically; add any other origins via CORS_ORIGINS.
+    ...(process.env.VITE_SITE_URL ? [process.env.VITE_SITE_URL] : []),
+    ...(process.env.CORS_ORIGINS || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+  ]
+);
+
+app.use(
+  cors({
+    // Allow non-browser requests (curl, server-to-server) and same-origin
+    // calls. A disallowed origin gets a response with NO CORS headers, so
+    // the browser blocks it from reading the response.
+    origin(origin, cb) {
+      if (!origin) return cb(null, true);
+      cb(null, allowedOrigins.has(origin));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400,
+  })
+);
+
 // 10mb so base64 media/resume uploads (up to ~6MB files) fit inside JSON bodies
 app.use(express.json({ limit: '10mb' }));
 
@@ -55,7 +117,16 @@ app.use('/api/stats', statsRoutes);
 // Serve uploaded media (used by the Media Library + Resume upload)
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-app.use('/uploads', express.static(uploadsDir));
+app.use(
+  '/uploads',
+  // Uploaded files are user-provided bytes served as documents — sandbox them
+  // so an uploaded SVG/HTML can never execute scripts in the API's origin.
+  (req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    next();
+  },
+  express.static(uploadsDir)
+);
 
 // Serve the built client (optional — handy for single-instance deploys)
 const clientDist = path.join(__dirname, '..', 'client', 'dist');

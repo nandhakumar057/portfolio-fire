@@ -1,23 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X, LayoutDashboard, Code2 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Menu, X, Sun, Moon, Code2 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const LINKS = [
   { to: '/', label: 'Home' },
   { to: '/about', label: 'About' },
   { to: '/skills', label: 'Skills' },
   { to: '/projects', label: 'Projects' },
-  { to: '/blog', label: 'Blog' },
+  { to: '/resume', label: 'Resume' },
   { to: '/certifications', label: 'Certifications' },
   { to: '/achievements', label: 'Achievements' },
-  { to: '/resume', label: 'Resume' },
+  { to: '/education', label: 'Education' },
+  { to: '/experience', label: 'Experience' },
+  { to: '/blog', label: 'Blog' },
   { to: '/contact', label: 'Contact' },
 ];
 
 function navClass({ isActive }) {
-  return `relative rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+  return `relative rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors duration-200 ${
     isActive ? 'text-white' : 'text-muted hover:text-white'
   }`;
 }
@@ -26,7 +28,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -47,13 +49,13 @@ export default function Navbar() {
           : 'border-b border-transparent bg-transparent'
       }`}
     >
-      <nav className="container-px flex h-16 items-center justify-between gap-4">
+      <nav className="container-px flex h-16 items-center justify-between gap-3">
         {/* Logo */}
         <Link to="/" className="group flex items-center gap-2 font-display text-lg font-bold">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-black transition-transform duration-300 group-hover:rotate-6">
             <Code2 size={18} />
           </span>
-          <span>
+          <span className="hidden xl:inline">
             Nandha<span className="text-muted">.dev</span>
           </span>
         </Link>
@@ -68,13 +70,23 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            to={isAdmin ? '/admin' : '/admin/login'}
-            title="Admin"
-            className="hidden h-9 w-9 items-center justify-center rounded-xl border border-edge text-muted transition-colors hover:border-white hover:text-white sm:flex"
+          {/* Theme toggle */}
+          <button
+            onClick={toggle}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-edge text-muted transition-colors duration-300 hover:border-white hover:text-white"
           >
-            <LayoutDashboard size={17} />
-          </Link>
+            <motion.span
+              key={theme}
+              initial={{ rotate: -90, opacity: 0, scale: 0.7 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="flex"
+            >
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+            </motion.span>
+          </button>
           <button
             onClick={() => setOpen((o) => !o)}
             aria-label="Toggle menu"
@@ -93,7 +105,7 @@ export default function Navbar() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="overflow-hidden border-b border-edge bg-black/95 backdrop-blur-xl lg:hidden"
+            className="max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-edge bg-black/95 backdrop-blur-xl lg:hidden"
           >
             <div className="container-px flex flex-col gap-1 py-4">
               {LINKS.map((l) => (
@@ -110,12 +122,6 @@ export default function Navbar() {
                   {l.label}
                 </NavLink>
               ))}
-              <NavLink
-                to={isAdmin ? '/admin' : '/admin/login'}
-                className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-accent"
-              >
-                <LayoutDashboard size={16} /> Admin
-              </NavLink>
             </div>
           </motion.div>
         )}

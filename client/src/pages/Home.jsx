@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Download,
@@ -32,7 +32,9 @@ import SocialLinks from '../components/SocialLinks';
 import Particles from '../components/Particles';
 import useTypewriter from '../hooks/useTypewriter';
 import usePageMeta from '../hooks/usePageMeta';
-import { getProfile, getStats, getSkills, getProjects } from '../api';
+import { useAuth } from '../context/AuthContext';
+import { getProfile, getStats, getSkills, getProjects, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 const FLOAT_BADGES = [
   { Icon: Atom, label: 'React', className: 'left-[-2rem] top-6', delay: 0 },
@@ -103,22 +105,63 @@ export default function Home() {
   const [stats, setStats] = useState(null);
   const [skills, setSkills] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    let mounted = true;
-    Promise.all([getProfile(), getStats(), getSkills(), getProjects()]).then(
-      ([p, s, sk, pr]) => {
-        if (!mounted) return;
+  const loadHome = () => {
+    setError('');
+    Promise.all([getProfile(), getStats(), getSkills(), getProjects()])
+      .then(([p, s, sk, pr]) => {
         setProfile(p);
         setStats(s);
         setSkills(sk);
         setProjects(pr);
-      }
-    );
-    return () => {
-      mounted = false;
-    };
+      })
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
+
+  useEffect(() => {
+    loadHome();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Discreet owner-only access field — verifies against the server so no
+  // secret ever lives in frontend code. Visitors never learn it exists.
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [accessCode, setAccessCode] = useState('');
+  const [accessError, setAccessError] = useState('');
+  const [checkingAccess, setCheckingAccess] = useState(false);
+
+  const handleAccess = async (e) => {
+    e.preventDefault();
+    const value = accessCode.trim();
+    if (!value || checkingAccess) return;
+    setCheckingAccess(true);
+    setAccessError('');
+    try {
+      await login(value);
+      navigate('/admin', { replace: true });
+    } catch (err) {
+      // Surface the real failure instead of blaming the code: a 401 means the
+      // code is wrong, a 429 means the rate limit tripped, and anything else
+      // (network error, API down, 404 on the API route) is an infra problem.
+      const status = err?.response?.status;
+      if (status === 401) {
+        setAccessError('Invalid access code.');
+      } else if (status === 429) {
+        setAccessError('Too many attempts — please wait a minute and try again.');
+      } else if (err?.response?.data?.message) {
+        setAccessError(err.response.data.message);
+      } else {
+        setAccessError('Cannot reach the server. Is the API running?');
+      }
+      setAccessCode('');
+    } finally {
+      setCheckingAccess(false);
+    }
+  };
+
+
 
   usePageMeta({
     title: 'Nandhakumar Thirunavukkarasu | UI/UX Designer & Web Developer',
@@ -146,6 +189,14 @@ export default function Home() {
 
   return (
     <PageWrap>
+      {error && (
+        <DataNotice
+          message={error}
+          onRetry={loadHome}
+          className="mx-auto mt-6 max-w-3xl"
+        />
+      )}
+
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="relative flex min-h-[calc(100vh-4rem)] items-center overflow-hidden">
         {/* Background: grid + aurora + particles */}
@@ -153,6 +204,38 @@ export default function Home() {
         <div className="aurora-glow absolute left-[-20%] top-[-30%] h-[70vh] w-[70vw] animate-aurora rounded-full blur-3xl" />
         <div className="aurora-glow absolute bottom-[-35%] right-[-15%] h-[60vh] w-[60vw] animate-aurora rounded-full blur-3xl [animation-delay:6s]" />
         <Particles density={70} />
+
+        {/* Discreet owner-only access field — unlabeled, blends with the hero */}
+        <form
+          onSubmit={handleAccess}
+          aria-label="Private access"
+          className="absolute right-4 top-4 z-20 flex flex-col items-end"
+        >
+          <input
+            type="password"
+            value={accessCode}
+            onChange={(e) => {
+              setAccessCode(e.target.value);
+              if (accessError) setAccessError('');
+            }}
+            placeholder="••••"
+            aria-label="Private access"
+            title="Private access"
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={24}
+            className="h-8 w-14 rounded-lg border border-white/10 bg-white/[0.04] text-center font-mono text-xs text-white/70 outline-none transition-all duration-300 placeholder:text-white/25 hover:border-white/25 hover:bg-white/[0.07] focus:w-24 focus:border-white/40 focus:bg-white/[0.08] sm:w-16"
+          />
+          {accessError && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-1.5 whitespace-nowrap text-[10px] font-medium text-muted"
+            >
+              {accessError}
+            </motion.p>
+          )}
+        </form>
 
         <div className="container-px relative grid items-center gap-14 py-20 lg:grid-cols-2">
           {/* Left */}

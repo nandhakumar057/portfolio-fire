@@ -38,7 +38,7 @@ export default function CertificationCard({ cert, index = 0 }) {
           <Calendar size={13} /> {cert.date || '—'}
         </span>
         {cert.category && (
-          <span className="rounded-full border border-edge bg-[#222222] px-2.5 py-0.5 font-medium text-accent">
+          <span className="chip">
             {cert.category}
           </span>
         )}

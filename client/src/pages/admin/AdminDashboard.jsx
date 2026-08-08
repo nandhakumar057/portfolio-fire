@@ -37,7 +37,9 @@ import {
   adminMessages,
   adminBlogAll,
   adminBlogComments,
+  apiErrorMessage,
 } from '../../api';
+import DataNotice from '../../components/DataNotice';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -170,12 +172,12 @@ const BLOG_FIELDS = [
 
 function Overview({ onNavigate }) {
   const [counts, setCounts] = useState(null);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    let mounted = true;
+  const loadCounts = () => {
+    setError('');
     Promise.all([getProjects(), getCertifications(), getSkills(), getAchievements()])
       .then(([p, c, s, a]) => {
-        if (!mounted) return;
         setCounts({
           projects: p.length,
           certifications: c.length,
@@ -183,10 +185,12 @@ function Overview({ onNavigate }) {
           achievements: a.length,
         });
       })
-      .catch(() => {});
-    return () => {
-      mounted = false;
-    };
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
+
+  useEffect(() => {
+    loadCounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cards = counts
@@ -201,6 +205,7 @@ function Overview({ onNavigate }) {
   return (
     <div>
       <h2 className="mb-6 font-display text-xl font-bold">Overview</h2>
+      {error && <DataNotice message={error} onRetry={loadCounts} className="mb-6" />}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card, i) => (
           <motion.button

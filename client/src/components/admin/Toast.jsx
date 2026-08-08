@@ -13,7 +13,7 @@ export default function Toast({ toast, onClose }) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 24, scale: 0.95 }}
           className={`fixed bottom-6 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2.5 rounded-xl px-5 py-3 text-sm font-medium shadow-2xl ${
-            success ? 'bg-white text-black' : 'border border-white/20 bg-[#161616] text-white'
+            success ? 'bg-white text-black' : 'alert'
           }`}
           onClick={onClose}
         >

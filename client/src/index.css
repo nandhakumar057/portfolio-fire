@@ -2,6 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ────────────────────────────────────────────────────────────────
+   Theme tokens
+   Light values live on :root; dark values apply when the `.dark`
+   class is present on <html>. Every color utility (bg-card,
+   text-muted, border-edge, bg-white, text-black, ...) resolves
+   through these variables, so one class toggle restyles the site.
+   ──────────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+  --c-white: 15 23 42;          /* ink — headings & inverted accents */
+  --c-black: 255 255 255;       /* paper — page background */
+  --c-primary: 15 23 42;
+  --c-accent: 71 85 105;        /* slate-600 */
+  --c-surface: 248 250 252;     /* slate-50 — footer / section washes */
+  --c-section: 255 255 255;     /* white — inputs */
+  --c-card: 255 255 255;        /* cards */
+  --c-edge: 226 232 240;        /* slate-200 — borders */
+  --c-muted: 100 116 139;       /* slate-500 — secondary text */
+  --c-overlay: 0 0 0;           /* modal backdrops stay dark in both themes */
+  --c-grid-line: rgba(15, 23, 42, 0.07);
+  --c-aurora: rgba(15, 23, 42, 0.06);
+  --c-aurora-soft: rgba(15, 23, 42, 0.02);
+  --c-chip-bg: #f1f5f9;
+  --c-btn-hover: #1e293b;
+  --c-scroll-track: #e2e8f0;
+  --c-error-bg: #fef2f2;
+  --c-error-border: rgba(190, 18, 60, 0.28);
+  --c-error-text: #b91c1c;
+  --c-cover-from: #e2e8f0;
+  --c-cover-to: #cbd5e1;
+}
+
+.dark {
+  color-scheme: dark;
+  --c-white: 255 255 255;
+  --c-black: 0 0 0;
+  --c-primary: 255 255 255;
+  --c-accent: 184 184 184;
+  --c-surface: 13 13 13;
+  --c-section: 18 18 18;
+  --c-card: 24 24 24;
+  --c-edge: 43 43 43;
+  --c-muted: 138 138 138;
+  --c-overlay: 0 0 0;
+  --c-grid-line: rgba(255, 255, 255, 0.05);
+  --c-aurora: rgba(255, 255, 255, 0.07);
+  --c-aurora-soft: rgba(255, 255, 255, 0.02);
+  --c-chip-bg: #222222;
+  --c-btn-hover: #e8e8e8;
+  --c-scroll-track: #0d0d0d;
+  --c-error-bg: #161616;
+  --c-error-border: rgba(255, 255, 255, 0.2);
+  --c-error-text: #ffffff;
+  --c-cover-from: #2b2b2b;
+  --c-cover-to: #181818;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -20,13 +77,27 @@ body {
   @apply bg-white text-black;
 }
 
+/* Smooth cross-fade when toggling themes (applied briefly on toggle) */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease,
+    fill 0.35s ease,
+    stroke 0.35s ease,
+    box-shadow 0.35s ease !important;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #0d0d0d;
+  background: var(--c-scroll-track);
 }
 ::-webkit-scrollbar-thumb {
   @apply rounded-full bg-edge;
@@ -45,7 +116,10 @@ body {
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#E8E8E8] hover:shadow-xl hover:shadow-white/10 active:translate-y-0;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-black transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/10 active:translate-y-0;
+  }
+  .btn-primary:hover {
+    background-color: var(--c-btn-hover);
   }
 
   .btn-outline {
@@ -61,7 +135,8 @@ body {
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-edge bg-[#222222] px-3 py-1 text-xs font-medium text-accent;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-edge px-3 py-1 text-xs font-medium text-accent;
+    background-color: var(--c-chip-bg);
   }
 
   .label {
@@ -71,22 +146,30 @@ body {
   .icon-chip {
     @apply flex h-10 w-10 items-center justify-center rounded-xl border border-edge bg-white/5 text-white transition-transform duration-300 group-hover:scale-110;
   }
+
+  /* Shared inline notice box (errors & info) — theme aware */
+  .alert {
+    @apply flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium;
+    border-color: var(--c-error-border);
+    background-color: var(--c-error-bg);
+    color: var(--c-error-text);
+  }
 }
 
-/* Subtle blueprint grid for hero/sections — monochrome */
+/* Subtle blueprint grid for hero/sections */
 .bg-grid {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(to right, var(--c-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--c-grid-line) 1px, transparent 1px);
   background-size: 46px 46px;
 }
 
-/* Animated aurora glows for the hero background (black/white only) */
+/* Animated aurora glows for the hero background */
 .aurora-glow {
   background: radial-gradient(
     40% 50% at 50% 50%,
-    rgba(255, 255, 255, 0.07) 0%,
-    rgba(255, 255, 255, 0.02) 45%,
+    var(--c-aurora) 0%,
+    var(--c-aurora-soft) 45%,
     transparent 70%
   );
 }

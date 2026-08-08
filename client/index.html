@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,7 +20,8 @@
     />
     <meta name="author" content="Nandhakumar Thirunavukkarasu" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <link rel="canonical" href="https://nandhakumar-portfolio.vercel.app/" />
 
     <!-- Open Graph / Facebook -->
@@ -53,9 +54,17 @@
       rel="stylesheet"
     />
 
-    <!-- Premium black theme only — dark is forced before first paint -->
+    <!-- Apply the saved theme before first paint (dark is the default) -->
     <script>
-      document.documentElement.classList.add('dark');
+      (function () {
+        try {
+          if (window.localStorage.getItem('pf_theme') !== 'light') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
     </script>
 
     <!-- Structured Data -->

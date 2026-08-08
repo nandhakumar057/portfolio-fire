@@ -5,7 +5,8 @@ import Reveal from '../components/Reveal';
 import SectionHeading from '../components/SectionHeading';
 import SkillCard from '../components/SkillCard';
 import usePageMeta from '../hooks/usePageMeta';
-import { getSkills } from '../api';
+import { getSkills, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 const CATEGORY_ICONS = {
   Frontend: Palette,
@@ -19,9 +20,18 @@ const CATEGORY_ORDER = ['Frontend', 'Backend', 'Database', 'Cloud & Tools', 'AI 
 
 export default function Skills() {
   const [skills, setSkills] = useState([]);
+  const [error, setError] = useState('');
+
+  const loadSkills = () => {
+    setError('');
+    getSkills()
+      .then(setSkills)
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
 
   useEffect(() => {
-    getSkills().then(setSkills);
+    loadSkills();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   usePageMeta({
@@ -42,6 +52,7 @@ export default function Skills() {
   return (
     <PageWrap>
       <section className="container-px py-16">
+        {error && <DataNotice message={error} onRetry={loadSkills} className="mb-8" />}
         <SectionHeading
           eyebrow="Tech stack"
           title="My Skills"

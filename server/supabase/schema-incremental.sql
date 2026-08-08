@@ -17,6 +17,7 @@ alter table profile add column if not exists photo text default '';
 alter table profile add column if not exists "resumeUrl" text default '';
 alter table profile add column if not exists "careerObjective" text;
 alter table profile add column if not exists "whyHireMe" jsonb default '[]';
+alter table profile add column if not exists experience jsonb default '[]';
 
 alter table messages add column if not exists replied boolean default false;
 

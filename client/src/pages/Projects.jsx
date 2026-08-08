@@ -5,16 +5,26 @@ import Reveal from '../components/Reveal';
 import SectionHeading from '../components/SectionHeading';
 import ProjectCard from '../components/ProjectCard';
 import usePageMeta from '../hooks/usePageMeta';
-import { getProjects } from '../api';
+import { getProjects, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 const FILTERS = ['All', 'Web Development', 'Full Stack', 'AI Projects', 'Academic Projects', 'UI/UX Design'];
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [filter, setFilter] = useState('All');
+  const [error, setError] = useState('');
+
+  const loadProjects = () => {
+    setError('');
+    getProjects()
+      .then(setProjects)
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
 
   useEffect(() => {
-    getProjects().then(setProjects);
+    loadProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   usePageMeta({
@@ -36,6 +46,7 @@ export default function Projects() {
   return (
     <PageWrap>
       <section className="container-px py-16">
+        {error && <DataNotice message={error} onRetry={loadProjects} className="mb-8" />}
         <SectionHeading
           eyebrow="Portfolio"
           title="My Projects"

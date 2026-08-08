@@ -4,13 +4,23 @@ import Reveal from '../components/Reveal';
 import SectionHeading from '../components/SectionHeading';
 import CertificationCard from '../components/CertificationCard';
 import usePageMeta from '../hooks/usePageMeta';
-import { getCertifications } from '../api';
+import { getCertifications, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 export default function Certifications() {
   const [certs, setCerts] = useState([]);
+  const [error, setError] = useState('');
+
+  const loadCerts = () => {
+    setError('');
+    getCertifications()
+      .then(setCerts)
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
 
   useEffect(() => {
-    getCertifications().then(setCerts);
+    loadCerts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   usePageMeta({
@@ -22,6 +32,7 @@ export default function Certifications() {
   return (
     <PageWrap>
       <section className="container-px py-16">
+        {error && <DataNotice message={error} onRetry={loadCerts} className="mb-8" />}
         <SectionHeading
           eyebrow="Credentials"
           title="Certifications"

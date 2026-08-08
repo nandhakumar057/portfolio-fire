@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import PageWrap from '../components/PageWrap';
 import usePageMeta from '../hooks/usePageMeta';
-import { getBlog, addBlogView, getBlogComments, addBlogComment } from '../api';
+import { getBlog, addBlogView, getBlogComments, addBlogComment, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 function readingTime(content) {
   const words = String(content || '').trim().split(/\s+/).filter(Boolean).length;
@@ -36,28 +37,37 @@ export default function BlogPost() {
   const [form, setForm] = useState({ name: '', email: '', content: '' });
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [commentsError, setCommentsError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const viewTracked = useRef(false);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const list = await getBlog();
-      if (!mounted) return;
-      setAllPosts(list);
-      const found = list.find((p) => (p.slug || p.id) === slug) || null;
-      setPost(found);
-      if (found) {
-        getBlogComments(found.id).then((cs) => mounted && setComments(cs));
-        if (!viewTracked.current) {
-          viewTracked.current = true;
-          addBlogView(found.id);
+      try {
+        const list = await getBlog();
+        if (!mounted) return;
+        setAllPosts(list);
+        const found = list.find((p) => (p.slug || p.id) === slug) || null;
+        setPost(found);
+        if (found) {
+          getBlogComments(found.id)
+            .then((cs) => mounted && setComments(cs))
+            .catch(() => mounted && setCommentsError(true));
+          if (!viewTracked.current) {
+            viewTracked.current = true;
+            addBlogView(found.id);
+          }
         }
+      } catch (err) {
+        if (mounted) setLoadError(apiErrorMessage(err));
       }
     })();
     return () => {
       mounted = false;
     };
-  }, [slug]);
+  }, [slug, reloadKey]);
 
   usePageMeta({
     title: post ? `${post.title} | Nandhakumar Thirunavukkarasu` : 'Blog | Nandhakumar Thirunavukkarasu',
@@ -70,6 +80,23 @@ export default function BlogPost() {
       .filter((p) => p.id !== post.id && p.category === post.category)
       .slice(0, 3);
   }, [post, allPosts]);
+
+  if (loadError) {
+    return (
+      <PageWrap>
+        <section className="container-px py-24 text-center">
+          <DataNotice
+            message={loadError}
+            onRetry={() => setReloadKey((k) => k + 1)}
+            className="mx-auto max-w-xl text-left"
+          />
+          <Link to="/blog" className="btn-outline mt-6">
+            <ArrowLeft size={16} /> Back to Blog
+          </Link>
+        </section>
+      </PageWrap>
+    );
+  }
 
   if (!post) {
     return (
@@ -135,7 +162,7 @@ export default function BlogPost() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-wrap items-center gap-3 text-xs text-muted"
           >
-            <span className="rounded-full border border-edge bg-[#222222] px-2.5 py-0.5 font-medium text-accent">
+            <span className="chip">
               {post.category}
             </span>
             <span className="flex items-center gap-1">
@@ -235,6 +262,18 @@ export default function BlogPost() {
               <MessageSquare size={20} /> Comments ({comments.length})
             </h2>
 
+            {commentsError && (
+              <DataNotice
+                message="Could not load comments."
+                onRetry={() => {
+                  setCommentsError(false);
+                  getBlogComments(post.id)
+                    .then(setComments)
+                    .catch(() => setCommentsError(true));
+                }}
+                className="mb-8"
+              />
+            )}
             {comments.length > 0 && (
               <div className="mb-8 space-y-4">
                 {comments.map((c) => (

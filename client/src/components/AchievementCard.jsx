@@ -32,7 +32,7 @@ export default function AchievementCard({ achievement, index = 0 }) {
             </span>
           )}
           {achievement.category && (
-            <span className="rounded-full border border-edge bg-[#222222] px-2.5 py-0.5 font-medium text-accent">
+            <span className="chip">
               {achievement.category}
             </span>
           )}

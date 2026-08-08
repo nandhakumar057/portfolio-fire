@@ -1,13 +1,12 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-/** Redirects visitors to the admin login page. */
+/** Guards admin-only routes — visitors bounce back to the home page. */
 export default function ProtectedRoute({ children }) {
   const { isAdmin } = useAuth();
-  const location = useLocation();
 
   if (!isAdmin) {
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/" replace />;
   }
   return children;
 }

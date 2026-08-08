@@ -39,6 +39,7 @@ create table if not exists profile (
   socials jsonb default '{}',
   stats jsonb default '{}',
   education jsonb default '[]',
+  experience jsonb default '[]',
   goals text,
   "careerObjective" text,
   "whyHireMe" jsonb default '[]',
@@ -81,6 +82,7 @@ alter table profile add column if not exists photo text default '';
 alter table profile add column if not exists "resumeUrl" text default '';
 alter table profile add column if not exists "careerObjective" text;
 alter table profile add column if not exists "whyHireMe" jsonb default '[]';
+alter table profile add column if not exists experience jsonb default '[]';
 
 -- ── Certifications ─────────────────────────────────────────────
 create table if not exists certifications (

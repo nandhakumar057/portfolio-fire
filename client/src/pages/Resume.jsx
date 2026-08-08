@@ -3,7 +3,8 @@ import { Download, Printer, GraduationCap, Award, FolderGit2, Code2, Mail, MapPi
 import PageWrap from '../components/PageWrap';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
-import { getProfile, getSkills, getCertifications, getProjects, getAchievements } from '../api';
+import { getProfile, getSkills, getCertifications, getProjects, getAchievements, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 /** Plain-text resume used for the "Download" button when no PDF is uploaded. */
 function buildResumeText(profile, skills, certifications, projects, achievements) {
@@ -47,17 +48,24 @@ export default function Resume() {
   const [certifications, setCertifications] = useState([]);
   const [projects, setProjects] = useState([]);
   const [achievements, setAchievements] = useState([]);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    Promise.all([getProfile(), getSkills(), getCertifications(), getProjects(), getAchievements()]).then(
-      ([p, sk, c, pr, a]) => {
+  const loadResume = () => {
+    setError('');
+    Promise.all([getProfile(), getSkills(), getCertifications(), getProjects(), getAchievements()])
+      .then(([p, sk, c, pr, a]) => {
         setProfile(p);
         setSkills(sk);
         setCertifications(c);
         setProjects(pr);
         setAchievements(a);
-      }
-    );
+      })
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
+
+  useEffect(() => {
+    loadResume();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   usePageMeta({
@@ -87,6 +95,7 @@ export default function Resume() {
   return (
     <PageWrap>
       <section className="container-px py-16">
+        {error && <DataNotice message={error} onRetry={loadResume} className="mb-8" />}
         <Reveal className="mb-10 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold sm:text-4xl">Resume</h1>

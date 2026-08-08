@@ -203,6 +203,9 @@ const profile = {
         'Pursuing a B.E. in Computer Science and Engineering with a strong focus on UI/UX design, web development and building real-world projects.',
     },
   ],
+  // { title, company, years, description } — the Experience page shows an
+  // "open to opportunities" state until at least one entry exists.
+  experience: [],
   goals:
     'To secure a UI/UX design or web development internship where I can apply design thinking and prototyping skills to real products, grow as a designer-developer and gain valuable industry exposure.',
   careerObjective:

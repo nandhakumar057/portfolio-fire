@@ -14,6 +14,7 @@ const ALLOWED = [
   'socials',
   'stats',
   'education',
+  'experience',
   'goals',
   'careerObjective',
   'whyHireMe',

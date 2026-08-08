@@ -97,6 +97,6 @@ export const fallbackAchievementIcon = Trophy;
 export const gradients = {
   neutral: 'from-white/[0.12] via-white/[0.05] to-transparent',
   slate: 'from-white/[0.08] to-transparent',
-  dark: 'from-[#2B2B2B] to-[#181818]',
+  dark: 'from-[var(--c-cover-from)] to-[var(--c-cover-to)]',
 };
 export const fallbackGradient = 'from-white/[0.12] via-white/[0.05] to-transparent';

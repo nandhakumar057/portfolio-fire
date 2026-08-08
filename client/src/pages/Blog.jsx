@@ -6,7 +6,8 @@ import PageWrap from '../components/PageWrap';
 import Reveal from '../components/Reveal';
 import SectionHeading from '../components/SectionHeading';
 import usePageMeta from '../hooks/usePageMeta';
-import { getBlog } from '../api';
+import { getBlog, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 function readingTime(content) {
   const words = String(content || '').trim().split(/\s+/).filter(Boolean).length;
@@ -25,9 +26,18 @@ export default function Blog() {
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState(params.get('tag') || '');
   const [category, setCategory] = useState('All');
+  const [error, setError] = useState('');
+
+  const loadBlog = () => {
+    setError('');
+    getBlog()
+      .then(setPosts)
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
 
   useEffect(() => {
-    getBlog().then(setPosts);
+    loadBlog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   usePageMeta({
@@ -71,6 +81,7 @@ export default function Blog() {
   return (
     <PageWrap>
       <section className="container-px py-16">
+        {error && <DataNotice message={error} onRetry={loadBlog} className="mb-8" />}
         <SectionHeading
           eyebrow="Insights"
           title="Blog"
@@ -150,7 +161,7 @@ export default function Blog() {
               </div>
               <div className="flex flex-col justify-center gap-3 p-8">
                 <div className="flex items-center gap-3 text-xs text-muted">
-                  <span className="rounded-full border border-edge bg-[#222222] px-2.5 py-0.5 font-medium text-accent">
+                  <span className="chip">
                     {featured.category}
                   </span>
                   <span className="flex items-center gap-1">
@@ -206,7 +217,7 @@ export default function Blog() {
                   </div>
                   <div className="flex flex-1 flex-col gap-2.5 p-6">
                     <div className="flex items-center gap-2 text-xs text-muted">
-                      <span className="rounded-full border border-edge bg-[#222222] px-2.5 py-0.5 font-medium text-accent">
+                      <span className="chip">
                         {post.category}
                       </span>
                       <span className="flex items-center gap-1">

@@ -6,7 +6,8 @@ import Reveal from '../components/Reveal';
 import SectionHeading from '../components/SectionHeading';
 import SocialLinks from '../components/SocialLinks';
 import usePageMeta from '../hooks/usePageMeta';
-import { getProfile, sendMessage } from '../api';
+import { getProfile, sendMessage, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 const EMPTY = { name: '', email: '', subject: '', message: '' };
 
@@ -15,9 +16,18 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState(null); // 'sending' | 'sent' | 'error'
   const [profile, setProfile] = useState(null);
+  const [profileError, setProfileError] = useState('');
+
+  const loadProfile = () => {
+    setProfileError('');
+    getProfile()
+      .then(setProfile)
+      .catch((err) => setProfileError(apiErrorMessage(err)));
+  };
 
   useEffect(() => {
-    getProfile().then(setProfile);
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   usePageMeta({
@@ -70,6 +80,10 @@ export default function Contact() {
           title="Let's talk"
           subtitle="Have a question, opportunity, or idea? Send me a message — I'll get back to you."
         />
+
+        {profileError && (
+          <DataNotice message={profileError} onRetry={loadProfile} className="mb-8" />
+        )}
 
         <div className="grid gap-10 lg:grid-cols-[1fr,1.4fr]">
           {/* Info */}
@@ -196,7 +210,7 @@ export default function Contact() {
                 <motion.p
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 rounded-xl border border-white/20 bg-[#161616] px-4 py-3 text-sm font-medium text-white"
+                  className="alert"
                 >
                   <AlertCircle size={17} /> Something went wrong. Please try again later.
                 </motion.p>

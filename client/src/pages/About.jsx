@@ -14,7 +14,8 @@ import SectionHeading from '../components/SectionHeading';
 import Avatar from '../components/Avatar';
 import SocialLinks from '../components/SocialLinks';
 import usePageMeta from '../hooks/usePageMeta';
-import { getProfile } from '../api';
+import { getProfile, apiErrorMessage } from '../api';
+import DataNotice from '../components/DataNotice';
 
 function splitList(value) {
   if (Array.isArray(value)) return value;
@@ -26,9 +27,18 @@ function splitList(value) {
 
 export default function About() {
   const [profile, setProfile] = useState(null);
+  const [error, setError] = useState('');
+
+  const loadProfile = () => {
+    setError('');
+    getProfile()
+      .then(setProfile)
+      .catch((err) => setError(apiErrorMessage(err)));
+  };
 
   useEffect(() => {
-    getProfile().then(setProfile);
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   usePageMeta({
@@ -43,6 +53,7 @@ export default function About() {
   return (
     <PageWrap>
       <section className="container-px py-16">
+        {error && <DataNotice message={error} onRetry={loadProfile} className="mb-8" />}
         <SectionHeading
           eyebrow="About me"
           title="Get to know me"

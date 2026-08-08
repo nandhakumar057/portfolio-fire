@@ -14,6 +14,7 @@ import Toast from './Toast';
 import { adminGetProfile, adminUpdateProfile, adminMediaUpload } from '../../api';
 
 const EMPTY_EDU = { degree: '', institution: '', years: '', description: '' };
+const EMPTY_EXP = { title: '', company: '', years: '', description: '' };
 const EMPTY_WHY = { title: '', description: '' };
 
 const SOCIAL_KEYS = ['github', 'linkedin', 'instagram', 'email'];
@@ -45,6 +46,7 @@ export default function ProfileForm() {
         interests: splitList(p.interests),
         values: splitList(p.values),
         education: (p.education || []).length ? p.education : [EMPTY_EDU],
+        experience: p.experience || [],
         whyHireMe: (p.whyHireMe || []).length ? p.whyHireMe : [EMPTY_WHY],
         socials: { github: '', linkedin: '', instagram: '', email: '', ...(p.socials || {}) },
         stats: { projects: 0, certifications: 0, technologies: 0, hackathons: 0, ...(p.stats || {}) },
@@ -89,6 +91,9 @@ export default function ProfileForm() {
           years: e.years,
           description: e.description,
         })),
+        experience: form.experience
+          .map((x) => ({ title: x.title, company: x.company, years: x.years, description: x.description }))
+          .filter((x) => x.title.trim() || x.company.trim()),
         careerObjective: form.careerObjective,
         whyHireMe: form.whyHireMe
           .map((w) => ({ title: w.title, description: w.description }))
@@ -389,6 +394,85 @@ export default function ProfileForm() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Experience */}
+        <section className="card p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted">
+              Experience
+            </h3>
+            <button
+              onClick={() => set('experience', [...form.experience, EMPTY_EXP])}
+              className="btn-outline px-3 py-1.5 text-xs"
+            >
+              <Plus size={13} /> Add
+            </button>
+          </div>
+          {form.experience.length === 0 ? (
+            <p className="text-sm text-muted">
+              No experience entries yet. Add internships or roles — the public Experience page
+              shows its “open to opportunities” state until then.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {form.experience.map((exp, i) => (
+                <div key={i} className="rounded-xl border border-edge p-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <input
+                      className="input"
+                      placeholder="Role / Title"
+                      value={exp.title}
+                      onChange={(e) => {
+                        const next = [...form.experience];
+                        next[i] = { ...next[i], title: e.target.value };
+                        set('experience', next);
+                      }}
+                    />
+                    <input
+                      className="input"
+                      placeholder="Company"
+                      value={exp.company}
+                      onChange={(e) => {
+                        const next = [...form.experience];
+                        next[i] = { ...next[i], company: e.target.value };
+                        set('experience', next);
+                      }}
+                    />
+                    <input
+                      className="input"
+                      placeholder="Years (e.g. 2025 - 2026)"
+                      value={exp.years}
+                      onChange={(e) => {
+                        const next = [...form.experience];
+                        next[i] = { ...next[i], years: e.target.value };
+                        set('experience', next);
+                      }}
+                    />
+                    <div className="flex gap-2 sm:col-span-3">
+                      <input
+                        className="input flex-1"
+                        placeholder="Description (optional)"
+                        value={exp.description}
+                        onChange={(e) => {
+                          const next = [...form.experience];
+                          next[i] = { ...next[i], description: e.target.value };
+                          set('experience', next);
+                        }}
+                      />
+                      <button
+                        onClick={() => set('experience', form.experience.filter((_, j) => j !== i))}
+                        aria-label="Remove"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-edge text-muted transition-colors hover:border-white hover:text-white"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Career objective */}
