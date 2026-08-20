@@ -32,7 +32,7 @@ npm run dev
 
 > macOS reserves port 5000 for AirPlay Receiver, so the API defaults to **5001**.
 
-### Admin access — code `2006`
+### Admin access — code `****`
 
 Open **`/admin/login`** and enter the access code. Default code:
 
