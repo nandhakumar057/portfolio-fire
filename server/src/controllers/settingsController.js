@@ -20,24 +20,34 @@ async function upsertKey(store, key, value) {
 
 /** GET /api/settings — public site info (no secrets). */
 async function getPublic(req, res) {
-  const map = await readSettingsMap();
-  const out = {};
-  for (const key of PUBLIC_KEYS) if (map[key] !== undefined) out[key] = map[key];
-  res.json(out);
+  try {
+    const map = await readSettingsMap();
+    const out = {};
+    for (const key of PUBLIC_KEYS) if (map[key] !== undefined) out[key] = map[key];
+    res.json(out);
+  } catch (err) {
+    console.error('[settings] getPublic error:', err.message);
+    res.status(500).json({ message: 'Failed to load settings.' });
+  }
 }
 
 /** PUT /api/settings — admin updates site info. */
 async function update(req, res) {
-  const store = await getStore();
-  const body = req.body || {};
-  const updated = {};
-  for (const key of PUBLIC_KEYS) {
-    if (body[key] !== undefined) {
-      await upsertKey(store, key, String(body[key]).slice(0, 500));
-      updated[key] = String(body[key]).slice(0, 500);
+  try {
+    const store = await getStore();
+    const body = req.body || {};
+    const updated = {};
+    for (const key of PUBLIC_KEYS) {
+      if (body[key] !== undefined) {
+        await upsertKey(store, key, String(body[key]).slice(0, 500));
+        updated[key] = String(body[key]).slice(0, 500);
+      }
     }
+    res.json(updated);
+  } catch (err) {
+    console.error('[settings] update error:', err.message);
+    res.status(500).json({ message: 'Failed to update settings.' });
   }
-  res.json(updated);
 }
 
 module.exports = { getPublic, update, readSettingsMap, upsertKey };

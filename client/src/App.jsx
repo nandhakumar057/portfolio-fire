@@ -27,6 +27,7 @@ const Education = lazy(() => import('./pages/Education'));
 const Experience = lazy(() => import('./pages/Experience'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -49,6 +50,7 @@ function AnimatedRoutes() {
         <Route path="/education" element={<Education />} />
         <Route path="/experience" element={<Experience />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin"
           element={

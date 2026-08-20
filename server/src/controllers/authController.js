@@ -126,7 +126,7 @@ async function changePassword(req, res) {
   } catch (err) {
     res.status(503).json({
       message:
-        'Could not save the new code — storage unavailable. Run the v2 schema on Supabase or check the data store.',
+        'Could not save the new code — storage unavailable. Check your database configuration.',
     });
   }
 }

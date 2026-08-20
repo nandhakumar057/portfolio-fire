@@ -6,8 +6,8 @@ student, Full Stack Developer and AI enthusiast.
 - **Frontend:** React 18 + Vite + Tailwind CSS + Framer Motion (premium **black enterprise** theme,
   dark only, page transitions, scroll animations, SEO meta/OG/Twitter/JSON-LD, sitemap, robots.txt)
 - **Backend:** Node.js + Express + JWT auth (access-code admin login)
-- **Database:** Supabase (Postgres) with an automatic **local JSON-file fallback** — the app runs
-  out of the box with zero configuration and upgrades to Supabase when you add credentials.
+- **Database:** Firebase Firestore with an automatic **local JSON-file fallback** — the app runs
+  out of the box with zero configuration and upgrades to Firestore when you add Firebase credentials.
 - **Admin dashboard:** analytics, full CRUD for projects / certifications / skills / achievements /
   blog posts, comment moderation, media library, contact-message inbox (search + reply status),
   profile & resume editor, site settings & admin-code change.
@@ -60,15 +60,14 @@ Change it anytime from **Settings** in the dashboard (survives restarts), or via
 │       ├── lib/             # icon + gradient maps
 │       └── pages/           # Home … Contact, Blog, admin/ (login + dashboard)
 ├── server/                  # Express + JWT API
-│   ├── supabase/schema.sql  # Supabase tables v2 (run in the SQL editor)
 │   └── src/
-│       ├── config/          # db store selection + seed data
+│       ├── config/          # db store selection, Firebase init, seed data, JWT
 │       ├── controllers/     # auth, content, blog, analytics, media, settings, profile, messages, stats
 │       ├── middleware/      # protect, adminOnly, rate limit
 │       ├── models/          # collection field schemas
 │       ├── routes/
-│       └── stores/          # supabaseStore + jsonStore (drop-in interface)
-└── vercel.json              # SPA rewrites for the frontend
+│       └── stores/          # firestoreStore + jsonStore (drop-in interface)
+└── firebase.json            # Firebase Hosting config (generated after setup)
 ```
 
 ---
@@ -77,7 +76,7 @@ Change it anytime from **Settings** in the dashboard (survives restarts), or via
 
 | Method | Endpoint                      | Access    | Description                            |
 | ------ | ----------------------------- | --------- | -------------------------------------- |
-| GET    | `/api/health`                 | public    | Health + active store (`json`/`supabase`) |
+| GET    | `/api/health`                 | public    | Health + active store (`json`/`firestore`) |
 | POST   | `/api/auth/login`             | public    | Access-code login → JWT (7 days)       |
 | POST   | `/api/auth/change-password`   | admin     | Change the admin access code           |
 | GET    | `/api/{projects\|certifications\|skills\|achievements}` | public | List items                |
@@ -101,64 +100,70 @@ Change it anytime from **Settings** in the dashboard (survives restarts), or via
 
 ---
 
-## Using Supabase
+## Using Firebase Firestore
 
-The server automatically uses the local JSON store (`server/data/db.json`) until Supabase
+The server automatically uses the local JSON store (`server/data/db.json`) until Firebase
 credentials are provided.
 
-1. Create a project at <https://supabase.com>.
-2. Open **SQL Editor** and run everything in [`server/supabase/schema.sql`](server/supabase/schema.sql)
-   (schema **v2** — idempotent, safe to run again). It creates the blog, comments, media,
-   settings and analytics tables, plus the new project/profile columns.
-3. Copy `Project URL` and a key into `server/.env`:
+1. Create a project at <https://console.firebase.google.com>.
+2. Enable **Firestore Database** (start in test mode, then secure with rules).
+3. Go to **Project Settings → Service Accounts → Generate new private key**.
+4. Add the credentials to `server/.env`:
 
    ```env
-   SUPABASE_URL=https://your-project.supabase.co
-   SUPABASE_KEY=sb_publishable_...            # publishable/anon key
-   # or
-   SUPABASE_SERVICE_ROLE_KEY=eyJ...           # service role (bypasses RLS) — for production
+   FIREBASE_PROJECT_ID=your-project-id
+   FIREBASE_CLIENT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
+   FIREBASE_STORAGE_BUCKET=your-project.appspot.com
    ```
 
-4. Restart the server. It seeds the tables on boot (idempotently — nothing gets duplicated).
-
-> ⚠️ **Recommended for production:** with a **publishable key**, anyone who extracts it could write
-> to your content tables directly — and the `settings` table holds the (bcrypt-hashed) admin code,
-> so it should never be writable by outsiders. Use the **service_role key** server-side (never in
-> the browser) for strict security. No code changes needed.
+5. Restart the server. It seeds the collections on boot (idempotently — nothing gets duplicated).
 
 ---
 
 ## Deployment
 
-### Frontend → Vercel
+### Frontend → Firebase Hosting
 
-```bash
-cd client
-# Project root for the Vercel build should be "client", build command "npm run build",
-# output directory "dist". Set env var: VITE_API_URL=https://your-api.onrender.com/api
-# Optional: VITE_SITE_URL=https://your-domain.com  (used for canonical/OG URLs)
-```
+1. Install the Firebase CLI:
+   ```bash
+   npm install -g firebase-tools
+   firebase login
+   ```
+2. Initialize Firebase Hosting in the project root:
+   ```bash
+   firebase init hosting
+   ```
+   - Select your Firebase project
+   - Set `public` directory to `client/dist`
+   - Configure as a single-page app: **Yes**
+   - Don't overwrite `index.html`: **No**
+3. Build and deploy:
+   ```bash
+   cd client && npm run build
+   cd .. && firebase deploy --only hosting
+   ```
+4. Set the env var `VITE_API_URL` in your `.env` to point to your deployed backend API.
 
-The included `vercel.json` (project root) handles SPA rewrites if you deploy from the repo root
-with the client as the output.
+> After deploying, update `VITE_SITE_URL` and rebuild so canonical/OG URLs reflect your
+> Firebase Hosting domain (`https://your-project.web.app`).
 
-### Backend → Render
+### Backend → Cloud Run / Render / Any Node Host
 
-1. Create a new **Web Service** pointing at this repo, root directory `server`.
+1. Create a **Web Service** pointing at this repo, root directory `server`.
 2. Build command: `npm install` · Start command: `npm start`.
-3. Add env vars: `JWT_SECRET`, `ADMIN_CODE`, and (if using Supabase) `SUPABASE_URL`,
-   `SUPABASE_SERVICE_ROLE_KEY`.
-4. After deploying, set `VITE_API_URL` on the Vercel frontend to `https://<your-service>.onrender.com/api`
-   and rebuild.
+3. Add env vars: `JWT_SECRET`, `ADMIN_CODE`, and the Firebase credentials:
+   `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `FIREBASE_STORAGE_BUCKET`.
+4. After deploying, set `VITE_API_URL` on the frontend to point to your backend API URL.
 
-> Note: files uploaded through the Media Library are stored on the server's disk (`server/uploads`)
-> and are wiped when a platform like Render restarts. For persistent images, add the image URL
-> (e.g. from Cloudinary or Supabase Storage) via "Add by URL" instead.
+> Files uploaded through the Media Library are stored in Firebase Storage (when configured)
+> or on the server's disk (`server/uploads`). For persistent uploads, configure
+> `FIREBASE_STORAGE_BUCKET` or add the image URL via "Add by URL" instead.
 
 ### Updating SEO URLs
 
 `sitemap.xml`, `robots.txt` and the `index.html` canonical/OG URLs reference a placeholder domain —
-replace `https://nandhakumar-portfolio.vercel.app` with your real domain (or set `VITE_SITE_URL`).
+replace `https://your-project.web.app` with your real Firebase Hosting domain (or set `VITE_SITE_URL`).
 
 ---
 

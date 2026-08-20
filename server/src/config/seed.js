@@ -15,8 +15,7 @@ async function seed() {
   const store = await getStore();
 
   // 1. Admin user (optional — primary admin access is the ADMIN_CODE).
-  //    Wrapped in try/catch: with a publishable Supabase key the users table
-  //    may be locked down by RLS, and that's fine.
+  //    Wrapped in try/catch: the users collection may be locked down, and that's fine.
   const username = process.env.ADMIN_USERNAME || 'admin';
   const password = process.env.ADMIN_PASSWORD || 'admin123';
   try {

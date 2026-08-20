@@ -32,8 +32,8 @@ app.set('trust proxy', 1);
 
 // ── Security headers (helmet v7) ────────────────────────────────────
 // CSP is tuned for the SPA served from client/dist: it has one inline
-// theme-bootstrap script and loads Google Fonts. Uploaded media is fetched
-// cross-origin by the Vercel-hosted frontend, so CORP must allow that.
+// theme-bootstrap script and loads Google Fonts. Uploaded media may be fetched
+// cross-origin by the deployed frontend, so CORP must allow that.
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -60,13 +60,12 @@ app.use(
 );
 
 // ── CORS allowlist ──────────────────────────────────────────────────
-// The SPA dev server and the deployed Vercel site are always allowed.
+// The SPA dev server and the deployed site are always allowed.
 // Add more origins (e.g. a custom domain) via CORS_ORIGINS (comma-separated).
 const allowedOrigins = new Set(
   [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://nandhakumar-portfolio.vercel.app',
     // When the SPA is deployed on a custom domain (VITE_SITE_URL), it is
     // allowed automatically; add any other origins via CORS_ORIGINS.
     ...(process.env.VITE_SITE_URL ? [process.env.VITE_SITE_URL] : []),

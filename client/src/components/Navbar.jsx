@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X, Sun, Moon, Code2 } from 'lucide-react';
+import { Menu, X, Sun, Moon, Code2, Shield } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 const LINKS = [
@@ -70,6 +70,15 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Hidden admin link — almost invisible until hovered */}
+          <Link
+            to="/admin/login"
+            aria-label="Admin"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted/30 transition-all duration-300 hover:border hover:border-edge hover:text-white hover:opacity-100"
+            title="Admin"
+          >
+            <Shield size={15} />
+          </Link>
           {/* Theme toggle */}
           <button
             onClick={toggle}

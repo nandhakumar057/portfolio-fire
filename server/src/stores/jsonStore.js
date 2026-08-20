@@ -25,7 +25,7 @@ function write(db) {
 }
 
 /**
- * Local JSON-file data store. Used automatically when Supabase is not
+ * Local JSON-file data store. Used automatically when Firestore is not
  * configured (or unreachable) so the app works out of the box.
  */
 const jsonStore = {

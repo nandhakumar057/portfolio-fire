@@ -10,6 +10,10 @@ server/data/
 .env.local
 *.local
 
+# Firebase
+.firebase/
+server/src/config/serviceAccountKey.json
+
 # Logs
 *.log
 npm-debug.log*
@@ -24,3 +28,5 @@ Thumbs.db
 
 # Uploaded media / resume files (runtime data)
 server/uploads/
+
+

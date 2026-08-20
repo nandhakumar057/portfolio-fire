@@ -1,6 +1,7 @@
 /**
- * Picks the active data store: Supabase when configured & reachable,
- * otherwise the local JSON file store (so the app always works).
+ * Picks the active data store: Firestore when Firebase credentials are
+ * configured, otherwise the local JSON file store (so dev works out of
+ * the box). Firebase Firestore is the official database.
  */
 
 let store = null;
@@ -9,28 +10,29 @@ let mode = 'json';
 async function getStore() {
   if (store) return store;
 
-  const jsonStore = require('../stores/jsonStore').default;
-  const { url, key } = require('./supabase').getSupabaseConfig();
+  const projectId = process.env.FIREBASE_PROJECT_ID;
 
-  if (url && key) {
+  if (projectId) {
     try {
-      const supabaseStore = require('../stores/supabaseStore').default;
-      await supabaseStore.ping(); // verifies the schema is applied
-      store = supabaseStore;
-      mode = 'supabase';
-      console.log(`[db] Connected to Supabase (${url})`);
+      const firestoreStore = require('../stores/firestoreStore').default;
+      await firestoreStore.ping();
+      store = firestoreStore;
+      mode = 'firestore';
+      console.log(`[db] Connected to Firestore (project: ${projectId})`);
     } catch (err) {
       console.warn(
-        `[db] Supabase check failed (${err.message}) — falling back to JSON file store. ` +
-          'Run server/supabase/schema.sql in your Supabase SQL editor first.'
+        `[db] Firestore check failed (${err.message}) — falling back to JSON file store. ` +
+          'Check your Firebase credentials in .env.'
       );
+      const jsonStore = require('../stores/jsonStore').default;
       store = jsonStore;
     }
   } else {
     console.log(
-      '[db] Using JSON file store (server/data/db.json). Set SUPABASE_URL & ' +
-        'SUPABASE_KEY to switch to Supabase.'
+      '[db] Using JSON file store (server/data/db.json). Set FIREBASE_PROJECT_ID & ' +
+        'FIREBASE_CLIENT_EMAIL & FIREBASE_PRIVATE_KEY to switch to Firestore.'
     );
+    const jsonStore = require('../stores/jsonStore').default;
     store = jsonStore;
   }
   return store;
