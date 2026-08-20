@@ -38,7 +38,7 @@ Open **`/admin/login`** and enter the access code. Default code:
 
 | Field | Value |
 | ----- | ----- |
-| Access code | `2006` |
+| Access code | `****` |
 
 Change it anytime from **Settings** in the dashboard (survives restarts), or via `ADMIN_CODE` in
 `server/.env`. (An optional username/password fallback also works via `ADMIN_USERNAME` /
